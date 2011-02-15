@@ -1,10 +1,5 @@
 class Person < ActiveRecord::Base
   self.include_root_in_json = false
-#  include Redis::TextSearch
-#
-#  text_index :preferred_name
-#  text_index :last_name
-
   def self.redis
     @redis ||= Redis.new(:host => 'localhost', :port => 6379, :password => "123")
   end
@@ -34,7 +29,6 @@ class Person < ActiveRecord::Base
       len = 2
       indexes = []
       next unless value
-p value
       while len <= value.length
         str = value[0, len].gsub(/\s+/, '.').downcase
         indexes << "person:auto:#{field}:#{str}"
@@ -49,8 +43,6 @@ p value
     return if indexes.empty?
     redis.pipelined do |pipe|
       indexes.each do |key|
-p key
-p self.to_json
         pipe.send(cmd, key, self.to_json)
       end
     end
